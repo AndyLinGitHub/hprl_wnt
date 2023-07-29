@@ -755,6 +755,60 @@ class KarelStateGenerator(object):
 
         return s, agent_pos[0], agent_pos[1], np.sum(s[:, :, 4]), metadata
 
+    def generate_single_state_harvester_whm(self, h=16, w=16, wall_prob=0.1, env_task_metadata={}, is_top_off=False):
+        """
+        initial state generator for harvester with hidden markers problem
+
+        :param h:
+        :param w:
+        :param wall_prob:
+        :return:
+        """
+        #mode = env_task_metadata.get("mode", "train")
+        #marker_prob = env_task_metadata.get("train_marker_prob", 1.0) if mode == 'train' else env_task_metadata.get("test_marker_prob", 1.0)
+
+
+        s = np.zeros([h, w, len(karel_option.state_table)]) > 0
+        # Wall
+        s[0, :, 4] = True
+        s[h-1, :, 4] = True
+        s[:, 0, 4] = True
+        s[:, w-1, 4] = True
+
+        # initial karel position: karel facing east at the last row in environment
+        agent_pos = (h-2, 1)
+        s[agent_pos[0], agent_pos[1], 1] = True
+
+        # put 1 marker at every location in grid
+        """
+        if marker_prob == 1.0:
+            s[1:h-1, 1:w-1, 6] = True
+        else:
+            valid_marker_pos = np.array([(r,c) for r in range(1,h-1) for c in range(1,w-1)])
+            marker_pos = valid_marker_pos[np.random.choice(len(valid_marker_pos), size=int(marker_prob*len(valid_marker_pos)), replace=False)]
+            for pos in marker_pos:
+                s[pos[0], pos[1], 6] = True
+        """
+
+        s[:, :, 5] = True
+        marker_flag = np.zeros([h, w]) > 0
+        marker_flag[0, :] = True
+        marker_flag[h-1, :] = True
+        marker_flag[:, 0] = True
+        marker_flag[:, w-1] = True
+        i, j = 1, 1
+        while(not marker_flag[i, j]):
+            marker_flag[i, j] = True
+            s[i, j ,6] = True
+            s[i, j ,5] = False
+            i = i+1
+            j = j+3
+            i = (i-1) % (h-2) + 1
+            j = (j-1) % (w-2) + 1
+
+        metadata = {"marker_flag": marker_flag}
+
+        return s, agent_pos[0], agent_pos[1], np.sum(s[:, :, 4]), metadata
 
 def _branch_execution_ratio(record_dict):
     if len(record_dict) == 0:
