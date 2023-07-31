@@ -1,3 +1,5 @@
 **/*.DS_Store
 _site/
 .*.sw[pon]
+__pycache__/
+pretrain/output_dir*

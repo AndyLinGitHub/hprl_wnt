@@ -610,12 +610,57 @@ class Karel_world(object):
         self.done = self.done or done
         return reward, done
 
+    def _get_harvester_whm_task_reward(self, agent_pos):
+        # check if already done
+        if self.done:
+            return 0.0, self.done
+
+        done = False
+        reward = 0
+        w = self.w
+        h = self.h
+        state = self.s_h[-1].copy()
+
+        marker_flag = self.metadata["marker_flag"].copy()
+        for i in range(1, h-1):
+            for j in range(1, w-1):
+                if marker_flag[i, j]:
+                    if state[i, j, 5]:
+                        i_next = i+1
+                        j_next = j+2
+                        i_next = (i_next-1) % (h-2) + 1
+                        j_next = (j_next-1) % (w-2) + 1
+
+                        if not marker_flag[i_next, j_next]:
+                            self.metadata["marker_flag"][i_next, j_next] = True
+
+                            num_marker = np.argmax(self.s[i_next, j_next, 5:])
+                            new_num_marker = np.clip(4*2-7 + num_marker, 0, MAX_NUM_MARKER_general)
+
+                            marker_vec = np.zeros(MAX_NUM_MARKER_topoff+1) > 0
+                            marker_vec[new_num_marker] = True
+                            self.s[i_next, j_next, 5:] = marker_vec
+
+
+        max_markers = marker_flag[1:(h-1), 1:(w-1)].sum() #(w-2)*(h-2)
+        marker_pick = max_markers - self.total_markers #(marker_flag[1:(h-1), 1:(w-1)].astype(int) - state[1:(h-1), 1:(w-1), 6].astype(int)).sum()
+        current_progress_ratio = marker_pick / ((w-2)*(h-2))
+        reward = current_progress_ratio - self.progress_ratio
+        self.progress_ratio = current_progress_ratio
+        done = (marker_pick == ((w-2)*(h-2)))
+
+        reward = reward if self.env_task == 'harvester_whm' else float(done)
+        self.done = self.done or done
+        return reward, done
+
 
     def _get_state_reward(self, agent_pos, made_error=False):
         if self.env_task == 'cleanHouse' or self.env_task == 'cleanHouse_sparse':
             reward, done = self._get_cleanHouse_task_reward(agent_pos)
         elif self.env_task == 'harvester' or self.env_task == 'harvester_sparse':
             reward, done = self._get_harvester_task_reward(agent_pos)
+        elif self.env_task == 'harvester_whm' or self.env_task == 'harvester_whm_sparse':
+            reward, done = self._get_harvester_whm_task_reward(agent_pos)
         elif self.env_task == 'fourCorners' or self.env_task == 'fourCorners_sparse':
             reward, done = self._get_fourCorners_task_reward(agent_pos)
         elif self.env_task == 'randomMaze' or self.env_task == 'randomMaze_sparse':

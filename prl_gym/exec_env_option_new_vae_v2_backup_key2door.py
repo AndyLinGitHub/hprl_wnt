@@ -495,6 +495,8 @@ class ExecEnv_option(ExecEnv):
             self.init_func = self.s_gen.generate_single_state_clean_house
         elif config.env_task == 'harvester' or config.env_task == 'harvester_sparse':
             self.init_func = self.s_gen.generate_single_state_harvester
+        elif config.env_task == 'harvester_whm' or config.env_task == 'harvester_whm_sparse':
+            self.init_func = self.s_gen.generate_single_state_harvester_whm
         elif config.env_task == 'fourCorners' or config.env_task == 'fourCorners_sparse':
             self.init_func = self.s_gen.generate_single_state_four_corners
         elif config.env_task == 'randomMaze' or config.env_task == 'randomMaze_sparse':
