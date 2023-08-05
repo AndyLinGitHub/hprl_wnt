@@ -810,6 +810,44 @@ class KarelStateGenerator(object):
 
         return s, agent_pos[0], agent_pos[1], np.sum(s[:, :, 4]), metadata
 
+    def generate_single_state_inverse(self, h=8, w=8, wall_prob=0.1, env_task_metadata={}, is_top_off=False):
+        world_map = [
+            ['-', '-', '-', '-', '-', '-', '-', '-'],
+            ['-',   0,   1,   0,   1,   0,   1, '-'],
+            ['-',   1,   0,   1,   0,   1,   0, '-'],
+            ['-',   0,   1,   0,   1,   0,   1, '-'],
+            ['-',   1,   0,   1,   0,   1,   0, '-'],
+            ['-',   0,   1,   0,   1,   0,   1, '-'],
+            ['-',   1,   0,   1,   0,   1,   0, '-'],
+            ['-', '-', '-', '-', '-', '-', '-', '-']
+        ]
+
+        s = np.zeros([h, w, 16]) > 0
+        # Wall
+        s[0, :, 4] = True
+        s[h-1, :, 4] = True
+        s[:, 0, 4] = True
+        s[:, w-1, 4] = True
+
+        agent_pos = (1, 1)
+        s[agent_pos[0], agent_pos[1], 1] = True
+
+        marker_pos = [(1, 2), (1, 4), (1, 6),
+                      (2, 1), (2, 3), (2, 5),
+                      (3, 2), (3, 4), (3, 6),
+                      (4, 1), (4, 3), (4, 5),
+                      (5, 2), (5, 4), (5, 6),
+                      (6, 1), (6, 3), (6, 5)]
+
+        s[:, :, 5] = True
+        for mp in marker_pos:
+            s[mp[0], mp[1], 6] = True
+            s[mp[0], mp[1], 5] = False
+
+        metadata = {}
+        
+        return s, agent_pos[0], agent_pos[1], np.sum(s[:, :, 4]), metadata
+
 def _branch_execution_ratio(record_dict):
     if len(record_dict) == 0:
         return None
